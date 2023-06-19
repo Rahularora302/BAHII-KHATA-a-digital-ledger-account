@@ -3,7 +3,10 @@ import React, { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import firebaseDB from "./firebase";
+import firebase from "./firebase";
+import 'firebase/database';
 import "./App.scss";
+//import "./crud";
 
 function App() {
   const [state, setState] = useState({
@@ -13,22 +16,89 @@ function App() {
     message: "",
   });
 
+
   const { name, email, subject, message } = state;
-  const handleSubmit = (e) => {
+
+
+
+  const handleSubmit = async(e) => {
+    console.log(e);
     e.preventDefault();
+    //if(e=='read') console.log("great");
     if (!name || !email || !subject || !message) {
       toast.error("Please provide value in each input field");
-    } else {
-      firebaseDB.child("contacts").push(state);
+    } else if (!isValidEmail(email)) {
+      toast.error("Please provide a valid email address");
+    }else {
+      console.log(name,email,subject,message);
+      //firebaseDB.child("student").push(state);
+      firebase.database.ref("student/" + name).set({name:name,  email:email, subject:subject, message:message,});
       setState({ name: "", email: "", subject: "", message: "" });
       toast.success("Form Submitted Successfully");
     }
   };
+const isValidEmail = (email) => {
+    // Email validation regular expression
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+const handleUpdate= (e) => {
+    console.log(e);
+    e.preventDefault();
+  if (!name || !email || !subject || !message) {
+     toast.error("Please provide value in each input field");
+    }else{
+    firebase.database.ref("student/" + name).update({email:email,subject:subject,message:message,});
+    setState({ name: "", email: "", subject: "", message: "" });
+      toast.success("Submitted  updated");
+}
+};
+
+
+const handleDelete = async (e) => {
+  e.preventDefault();
+  if (!name || !email || !subject || !message) {
+    toast.error("Please provide a value in each input field");
+  } else {
+    
+    firebase
+      .database
+      .ref("student/" + name)
+      .remove();
+        setState({ name: "", email: "", subject: "", message: "" });
+        toast.success("Data deleted successfully");
+      }
+      
+  }
+
+const handleRead = async (e) => {
+  e.preventDefault();
+  if (!name) {
+    toast.error("Please provide a name");
+  } else {
+     firebase.database.ref("student/" + name).on("value", function (snap) {
+      const data = snap.val();
+      if (data) {
+        setState({
+          name: data.name,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
+        });
+      } else {
+        //toast.error("No data found for the provided name");
+      }
+    });
+  }
+};
+
+
 
   const handleInputChange = (e) => {
     let { name, value } = e.target;
     setState({ ...state, [name]: value });
   };
+  
  
 
 
@@ -46,32 +116,39 @@ function App() {
                     <form
                       id="contactForm"
                       className="contactForm"
-                      onSubmit={handleSubmit}
+                      //onSubmit={handleSubmit}
                     >
                       <div className="row">
                         <div className="col-md-12">
-                          <div className="form-group">
+                          <div className="form-group" >
                             <input
                               type="text"
                               className="form-control"
                               name="name"
+                              id = "name"
                               placeholder="Name"
-                              autocomplete="off" 
+                              autoComplete="off" 
+                               value={name}
                               onChange={handleInputChange}
-                              value={name}
+                              required
+                             
                             />
                           </div>
                         </div>
                         <div className="col-md-12">
                           <div className="form-group">
                             <input
-                              type="email"
+                             type="email"
                               className="form-control"
                               name="email"
-                              autocomplete="off" 
+                              id = "email"
                               placeholder="Email"
+                              autoComplete="off" 
+                               value={email}
+                          
+                               //pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                             
                               onChange={handleInputChange}
-                              value={email}
                             />
                           </div>
                         </div>
@@ -81,10 +158,13 @@ function App() {
                               type="text"
                               className="form-control"
                               name="subject"
-                              autocomplete="off" 
+                              id = "subject"
+                              autoComplete="off" 
                               placeholder="Subject"
+                               value={subject}
                               onChange={handleInputChange}
-                              value={subject}
+                              required
+                              
                             />
                           </div>
                         </div>
@@ -94,20 +174,48 @@ function App() {
                               type="text"
                               className="form-control"
                               name="message"
-                              autocomplete="off" 
+                              autoComplete="off" 
+                              id = "message"
                               placeholder="Message"
                               cols="30"
                               rows="6"
+                               value={message}
                               onChange={handleInputChange}
-                              value={message}
+                              required
+                             
                             ></textarea>
                           </div>
                         </div>
                         <div className="col-md-12">
                           <div className="form-group">
+                           <input
+                             id="submit"
+                            type="submit"
+                            value="insert"
+                            onClick={handleSubmit}
+                            className="btn btn-primary"
+
+                            />
+                             <input
+                              id="read"
+                              type="button"
+                              value="read"
+                              onClick= {handleRead}
+                              className="btn btn-primary"
+                            />
+                             <input
+                              id="update"
+                              type="button"
+                              
+                              value="update"
+                               onClick= {handleUpdate}
+                              className="btn btn-primary"
+                            />
                             <input
-                              type="submit"
-                              value="Send Message"
+                              id="delete"
+                              type="button"
+                              value="delete"
+                                onClick= {handleDelete}
                               className="btn btn-primary"
                             />
                           </div>
@@ -176,8 +284,11 @@ function App() {
         </div>
       </div>
     </section>
+  
+    
   );
 }
+
 
 export default App;
 

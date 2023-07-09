@@ -6,18 +6,23 @@ import firebaseDB from "./firebase";
 import firebase from "./firebase";
 import 'firebase/database';
 import "./App.scss";
-//import "./crud";
+import { ref } from "firebase/database";
+
 
 function App() {
   const [state, setState] = useState({
     name: "",
-    email: "",
-    subject: "",
+   // email: "",
+    ContactNumber:"",
     message: "",
+    PendingShipments: "",
+    OrdersDispatched: "",
+    AmountRecieved: "",
+    Balance:"",
   });
 
 
-  const { name, email, subject, message } = state;
+  const { name, ContactNumber, message,PendingShipments,OrdersDispatched,AmountRecieved,Balance} = state;
 
 
 
@@ -25,31 +30,32 @@ function App() {
     console.log(e);
     e.preventDefault();
     //if(e=='read') console.log("great");
-    if (!name || !email || !subject || !message) {
+    if (!name || !ContactNumber ||!Balance  ||!PendingShipments||!OrdersDispatched ||!AmountRecieved) {
       toast.error("Please provide value in each input field");
-    } else if (!isValidEmail(email)) {
+    } /*else if (!isValidEmail(email)) {
       toast.error("Please provide a valid email address");
-    }else {
-      console.log(name,email,subject,message);
-      //firebaseDB.child("student").push(state);
-      firebase.database.ref("student/" + name).set({name:name,  email:email, subject:subject, message:message,});
-      setState({ name: "", email: "", subject: "", message: "" });
+    }*/else {
+      
+      const safeName = name.replace(".", "_");
+      firebase.database.ref("student/" + safeName).set({name:name,  ContactNumber:ContactNumber, Balance:Balance, message:message,PendingShipments:PendingShipments, OrdersDispatched: OrdersDispatched,AmountRecieved:AmountRecieved});
+      setState({ name: "", ContactNumber: "", Balance: "", message: "" ,PendingShipments:"",OrdersDispatched: "",AmountRecieved:""});
       toast.success("Form Submitted Successfully");
     }
   };
-const isValidEmail = (email) => {
+/*const isValidEmail = (email) => {
     // Email validation regular expression
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  };
+  };*/
 const handleUpdate= (e) => {
     console.log(e);
     e.preventDefault();
-  if (!name || !email || !subject || !message) {
+ if (!name || !ContactNumber ||!Balance  ||!PendingShipments||!OrdersDispatched ||!AmountRecieved) {
      toast.error("Please provide value in each input field");
     }else{
-    firebase.database.ref("student/" + name).update({email:email,subject:subject,message:message,});
-    setState({ name: "", email: "", subject: "", message: "" });
+        const safeName = name.replace(".", "_");
+    firebase.database.ref("student/" + safeName).update({ContactNumber:ContactNumber,message:message,PendingShipments:PendingShipments, OrdersDispatched: OrdersDispatched,AmountRecieved:AmountRecieved, Balance:Balance});
+    setState({ name: "", ContactNumber: "", Balance: "", message: "" ,PendingShipments:"",OrdersDispatched: "",AmountRecieved:""});
       toast.success("Submitted  updated");
 }
 };
@@ -57,15 +63,15 @@ const handleUpdate= (e) => {
 
 const handleDelete = async (e) => {
   e.preventDefault();
-  if (!name || !email || !subject || !message) {
+  if (!name || !ContactNumber || !Balance  ||!PendingShipments||!OrdersDispatched ||!AmountRecieved) {
     toast.error("Please provide a value in each input field");
   } else {
-    
+      const safeName = name.replace(".", "_");
     firebase
       .database
-      .ref("student/" + name)
+      .ref("student/" + safeName)
       .remove();
-        setState({ name: "", email: "", subject: "", message: "" });
+        setState({ name: "", ContactNumber: "", Balance: "", message: "" ,PendingShipments:"",OrdersDispatched: "",AmountRecieved:""});
         toast.success("Data deleted successfully");
       }
       
@@ -76,21 +82,30 @@ const handleRead = async (e) => {
   if (!name) {
     toast.error("Please provide a name");
   } else {
-     firebase.database.ref("student/" + name).on("value", function (snap) {
+      const safeName = name.replace(".", "_");
+     firebase.database.ref("student/" + safeName).on("value", function (snap) {
       const data = snap.val();
       if (data) {
         setState({
           name: data.name,
-          email: data.email,
-          subject: data.subject,
+          //email: data.email,
+          ContactNumber:data.ContactNumber,
+          Balance: data.Balance,
           message: data.message,
+          PendingShipments: data.PendingShipments,
+          OrdersDispatched: data.OrdersDispatched,
+          AmountRecieved:data.AmountRecieved
         });
-      } else {
-        //toast.error("No data found for the provided name");
-      }
+      } /*else  {
+        toast.error("No data found for the provided name");
+      }*/
+   
     });
+    
   }
 };
+
+
 
 
 
@@ -112,7 +127,7 @@ const handleRead = async (e) => {
               <div className="row no-gutters">
                 <div className="col-md-6">
                   <div className="contact-wrap w-100 p-lg-5 p-4">
-                    <h3 className="mb-4">Send us a message</h3>
+                    <h3 className="mb-4" >Order Status :</h3>
                     <form
                       id="contactForm"
                       className="contactForm"
@@ -126,7 +141,7 @@ const handleRead = async (e) => {
                               className="form-control"
                               name="name"
                               id = "name"
-                              placeholder="Name"
+                              placeholder="Client's Name"
                               autoComplete="off" 
                                value={name}
                               onChange={handleInputChange}
@@ -135,20 +150,19 @@ const handleRead = async (e) => {
                             />
                           </div>
                         </div>
-                        <div className="col-md-12">
+                         <div className="col-md-12">
                           <div className="form-group">
                             <input
-                             type="email"
+                              type="tel"
                               className="form-control"
-                              name="email"
-                              id = "email"
-                              placeholder="Email"
+                              name="ContactNumber"
+                              id = "ContactNumber"
                               autoComplete="off" 
-                               value={email}
-                          
-                               //pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-                             
+                              placeholder="Contact Number"
+                               value={ContactNumber}
                               onChange={handleInputChange}
+                              
+                              
                             />
                           </div>
                         </div>
@@ -157,14 +171,59 @@ const handleRead = async (e) => {
                             <input
                               type="text"
                               className="form-control"
-                              name="subject"
-                              id = "subject"
+                              name="OrdersDispatched"
+                              id = "OrdersDispatched"
                               autoComplete="off" 
-                              placeholder="Subject"
-                               value={subject}
+                              placeholder="Orders Dispatched"
+                               value={OrdersDispatched}
                               onChange={handleInputChange}
-                              required
                               
+                              
+                            />
+                          </div>
+                        </div>
+                         <div className="col-md-12">
+                          <div className="form-group">
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="PendingShipments"
+                              id = "PendingShipments"
+                              autoComplete="off" 
+                              placeholder="Pending Shipments"
+                               value={PendingShipments}
+                              onChange={handleInputChange}
+                          
+                            />
+                          </div>
+                          </div>
+                          <div className="col-md-12">
+                          <div className="form-group">
+                            <input
+                              type="number"
+                              className="form-control"
+                              name="AmountRecieved"
+                              id = "AmountRecieved"
+                              autoComplete="off" 
+                              placeholder="Amount Recieved"
+                               value={AmountRecieved}
+                              onChange={handleInputChange}
+                          
+                            />
+                          </div>
+                        </div>
+                          <div className="col-md-12">
+                          <div className="form-group">
+                            <input
+                              type="number"
+                              className="form-control"
+                              name="Balance"
+                              id = "Balance"
+                              autoComplete="off" 
+                              placeholder="Balance"
+                               value={Balance}
+                              onChange={handleInputChange}
+                          
                             />
                           </div>
                         </div>
@@ -178,7 +237,7 @@ const handleRead = async (e) => {
                               id = "message"
                               placeholder="Message"
                               cols="30"
-                              rows="6"
+                              rows="4"
                                value={message}
                               onChange={handleInputChange}
                               required
@@ -226,18 +285,18 @@ const handleRead = async (e) => {
                 </div>
                 <div className="col-md-6 d-flex align-items-stretch">
                   <div className="info-wrap w-100 p-lg-5 p-4 img">
-                    <h3>Contact us</h3>
-                    <p className="mb-4">
-                      We're open for any suggestion or just to have a chat
-                    </p>
+                    <h3>needleton's</h3>
+                    <h1>BAHII - KHATA</h1>
+        
                     <div className="dbox w-100 d-flex align-items-start">
                       <div className="icon d-flex align-items-center justify-content-center">
                         <span className="fa fa-map-marker"></span>
                       </div>
                       <div className="text pl-3">
                         <p>
-                          <span>Address:</span> 198 West 21th Street, Suite 721
-                          New York NY 10016
+                          <span>Address :
+                          GH-14,Paschim Vihar,New Delhi</span>
+                         
                         </p>
                       </div>
                     </div>
@@ -248,7 +307,7 @@ const handleRead = async (e) => {
                       <div className="text pl-3">
                         <p>
                           <span>Phone:</span>
-                          <a href="tel://123456789">+1235 2355 98</a>
+                          <a href="tel://123456789">+1235 2385 98</a>
                         </p>
                       </div>
                     </div>
@@ -258,9 +317,9 @@ const handleRead = async (e) => {
                       </div>
                       <div className="text pl-3">
                         <p>
-                          <span>Email:</span>
+                          <span>Email : </span>
                           <a href="mailto:info@yoursite.com">
-                            info@yoursite.com
+                            needleton123@gmail.com
                           </a>
                         </p>
                       </div>
@@ -271,8 +330,8 @@ const handleRead = async (e) => {
                       </div>
                       <div className="text pl-3">
                         <p>
-                          <span>Website:</span>
-                          <a href="#">yoursite.com</a>
+                          <span>Website : </span>
+                         <a href="#">needleton.com</a>
                         </p>
                       </div>
                     </div>
